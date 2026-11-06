@@ -9,7 +9,8 @@ from api.encoding import b64_uint8
 from config.regions import DEFAULT_REGION, REGIONS
 from config.settings import ALERT_THRESHOLD
 from src.context import load_region_context
-from src.scenario import run_storm
+from src.rainfall.live import LiveUnavailable, get_live_rain
+from src.scenario import run_live, run_storm
 
 app = FastAPI(title="Landslide EWS")
 
@@ -43,6 +44,18 @@ def simulate(region: str = DEFAULT_REGION,
     storm = run_storm(_ctx(region).slope, total_mm, hours, pattern)
     return dict(frames=[b64_uint8(f) for f in storm.risk_frames], hours=storm.hours,
                 cum=storm.cum, rate=storm.rate, total_hours=storm.total_hours)
+
+
+@app.get("/api/live")
+def live(region: str = DEFAULT_REGION, refresh: bool = False):
+    ctx = _ctx(region)
+    try:
+        rain = get_live_rain(ctx.grid.region, refresh=refresh)
+    except LiveUnavailable as err:
+        raise HTTPException(503, str(err))
+    res = run_live(ctx.slope, ctx.grid, rain)
+    return dict(frames=[b64_uint8(f) for f in res.risk_frames], offsets=res.offsets, rate=res.rate,
+                r72=res.r72, now_frame=res.now_frame, fetched_at=res.fetched_at.isoformat(), stale=res.stale)
 
 
 app.mount("/", StaticFiles(directory=Path(__file__).resolve().parent.parent / "static", html=True), name="static")

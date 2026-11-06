@@ -85,10 +85,10 @@
   <h1 id="title">Nilgiris landslide watch</h1>
   <p class="sub">Drag the storm and watch the hillsides respond.</p>
   <div class="seg" role="group" aria-label="Rainfall source">
-    <button aria-pressed="true">Simulation</button>
-    <button disabled title="Live rainfall connects on day 4">Live rainfall</button>
+    <button id="mode-sim" aria-pressed="true">Simulation</button>
+    <button id="mode-live" aria-pressed="false">Live rainfall</button>
   </div>
-  <div class="hide-sm">
+  <div class="hide-sm" id="sim-controls">
     <label for="mm">Total rainfall</label>
     <div class="row"><input id="mm" type="range" min="0" max="400" step="10" value="240"><b id="mmv" style="margin-left:12px;min-width:64px;text-align:right">240 mm</b></div>
     <label for="hrs">Storm duration</label>
@@ -101,6 +101,7 @@
     </div>
   </div>
   <button id="run">Run storm</button>
+  <p class="note" id="src-note"></p>
   <p class="note hide-sm">Terrain and settlements are placeholders until the real elevation and village data are loaded.</p>
 </section>
 
@@ -134,7 +135,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let S;                       // static grid info
 let cells = [];              // [{i}] one per grid cell
 let scen = null;             // current storm: {risk:[Uint8Array], hours, cum, rate, firstAlert:[]}
-let frame = 0, playing = false, playTimer = null, pattern = 'burst';
+let frame = 0, playing = false, playTimer = null, pattern = 'burst', mode = 'sim';
 let lastFeedCount = 0;
 
 /* ---------- colour ramp: stable teal -> amber -> orange -> crimson ---------- */
@@ -207,9 +208,9 @@ function buildLayers(t){
     // rain front sweeping west to east across the storm
     const prog = frame/Math.max(1,scen.risk.length-1);
     const peak = Math.max(...scen.rate,1);
-    const k = Math.min(1, scen.rate[frame]/peak);
+    const k = scen.mode==='live' ? Math.min(1, scen.rate[frame]/4) : Math.min(1, scen.rate[frame]/peak);
     const W = S.east-S.west, H = S.dlat*S.rows;
-    const cx = S.west + (0.04+0.92*prog)*W;
+    const cx = scen.mode==='live' ? S.west+0.5*W : S.west + (0.04+0.92*prog)*W;
     const blobs = BLOBS.map(b=>({
       p:[cx+b.x*W*0.16+Math.sin(t/2200+b.s)*W*0.01, S.south+(0.5+b.y*0.5)*H+Math.cos(t/2600+b.s)*H*0.01],
       r:b.r*(0.5+0.8*k)
@@ -258,10 +259,48 @@ async function runStorm(){
   const risk = d.frames.map(b64);
   const thr = Math.round(S.threshold*100);
   const firstAlert = S.villages.map(v=>risk.findIndex(f=>f[v.cell]>=thr));
-  scen = {risk, hours:d.hours, cum:d.cum, rate:d.rate, firstAlert, totalHours:d.total_hours};
+  scen = {mode:'sim', risk, hours:d.hours, cum:d.cum, rate:d.rate, firstAlert, totalHours:d.total_hours};
+  $('#src-note').textContent='';
   const sc=$('#scrub'); sc.max=risk.length-1; sc.value=0; frame=0; lastFeedCount=0;
   update(); btn.disabled=false; btn.textContent='Run storm';
   play();
+}
+
+function hourLabel(f, long=false){
+  if(scen.mode!=='live') return `Hour ${scen.hours[f]}`;
+  const o=scen.offsets[f];
+  if(o===0) return 'Now';
+  return o<0 ? `${-o} h ago` : (long?`Forecast, ${o} h ahead`:`+${o} h`);
+}
+const fmtTime = iso => new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+async function loadLive(refresh=false){
+  const btn=$('#run'); btn.disabled=true; btn.textContent='Fetching live rainfall…'; stop();
+  try{
+    const r = await fetch('/api/live'+(refresh?'?refresh=true':''));
+    if(!r.ok){ let m=r.statusText; try{ m=(await r.json()).detail||m; }catch(_){} throw new Error(m); }
+    const d = await r.json();
+    const risk=d.frames.map(b64), thr=Math.round(S.threshold*100);
+    const firstAlert=S.villages.map(v=>risk.findIndex(f=>f[v.cell]>=thr));
+    scen={mode:'live', risk, offsets:d.offsets, rate:d.rate, r72:d.r72, firstAlert};
+    const sc=$('#scrub'); sc.max=risk.length-1; frame=d.now_frame; lastFeedCount=0;
+    $('#src-note').textContent = d.stale
+      ? `Offline: showing rainfall cached at ${fmtTime(d.fetched_at)}.`
+      : `Live rainfall from Open-Meteo, fetched ${fmtTime(d.fetched_at)}.`;
+    update();
+  }catch(e){
+    $('#src-note').textContent='Live rainfall unavailable: '+e.message;
+  }
+  btn.disabled=false; btn.textContent='Refresh live data';
+}
+
+function setMode(m){
+  mode=m; stop();
+  $('#mode-sim').setAttribute('aria-pressed', String(m==='sim'));
+  $('#mode-live').setAttribute('aria-pressed', String(m==='live'));
+  $('#sim-controls').style.display = m==='sim' ? '' : 'none';
+  if(m==='live'){ $('#run').textContent='Refresh live data'; loadLive(false); }
+  else { $('#run').textContent='Run storm'; runStorm(); }
 }
 
 function update(){
@@ -273,14 +312,16 @@ function update(){
   $('#s-alert').textContent=`${alerted.length} of ${S.villages.length}`;
   $('#s-pop').textContent=alerted.reduce((a,v)=>a+v.pop,0).toLocaleString();
   $('#s-area').textContent=(100*hi/f.length).toFixed(1)+'%';
-  $('#clock').innerHTML=`Hour ${scen.hours[frame]} of ${scen.totalHours}<small>${Math.round(scen.cum[frame])} mm fallen, ${scen.rate[frame].toFixed(1)} mm/h now</small>`;
+  $('#clock').innerHTML = scen.mode==='live'
+    ? `${hourLabel(frame,true)}<small>${Math.round(scen.r72[frame])} mm in the previous 72 h, ${scen.rate[frame].toFixed(1)} mm/h (area average)</small>`
+    : `Hour ${scen.hours[frame]} of ${scen.totalHours}<small>${Math.round(scen.cum[frame])} mm fallen, ${scen.rate[frame].toFixed(1)} mm/h now</small>`;
 
   const items=S.villages.map((v,j)=>({v,fa:scen.firstAlert[j]})).filter(x=>x.fa>=0&&x.fa<=frame).sort((a,b)=>b.fa-a.fa);
   const feed=$('#feed');
   if(!items.length){ feed.innerHTML='<li class="empty">No settlement has crossed 70% risk yet.</li>'; lastFeedCount=0; return; }
   feed.innerHTML=items.map((x,k)=>{
     const r=scen.risk[x.fa][x.v.cell];
-    return `<li class="${k===0&&items.length>lastFeedCount?'new':''}"><span>${x.v.name} reached ${r}% risk<br><span style="color:var(--muted)">${x.v.pop.toLocaleString()} people</span></span><span>Hour ${scen.hours[x.fa]}</span></li>`;
+    return `<li class="${k===0&&items.length>lastFeedCount?'new':''}"><span>${x.v.name} reached ${r}% risk<br><span style="color:var(--muted)">${x.v.pop.toLocaleString()} people</span></span><span>${hourLabel(x.fa)}</span></li>`;
   }).join('');
   lastFeedCount=items.length;
 }
@@ -303,7 +344,9 @@ function stop(){
 }
 $('#play').onclick=()=>playing?stop():play();
 $('#scrub').oninput=e=>{ stop(); frame=+e.target.value; update(); };
-$('#run').onclick=runStorm;
+$('#run').onclick=()=>mode==='live'?loadLive(true):runStorm();
+$('#mode-sim').onclick=()=>{ if(mode!=='sim') setMode('sim'); };
+$('#mode-live').onclick=()=>{ if(mode!=='live') setMode('live'); };
 $('#mm').oninput=e=>$('#mmv').textContent=e.target.value+' mm';
 $('#hrs').oninput=e=>$('#hrsv').textContent=e.target.value+' h';
 $('#patterns').onclick=e=>{

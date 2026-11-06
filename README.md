@@ -14,7 +14,7 @@ pytest                              # sanity checks
 |---|---|
 | `config/` | Region boxes (`regions.py`) and global settings (`settings.py`) |
 | `src/terrain/` | Grid, elevation source, slope and other terrain features |
-| `src/rainfall/` | Storm simulator (live rainfall source arrives day 4) |
+| `src/rainfall/` | Storm simulator, live Open-Meteo source (`live.py`), rolling totals, interpolation |
 | `src/model/` | `predict_risk()`, the single function the trained model replaces |
 | `src/exposure/` | Settlements at risk |
 | `src/roads/`, `src/alerts/` | Road-network cascade (day 5), Telegram alerts (day 6) |
@@ -25,4 +25,4 @@ pytest                              # sanity checks
 | `data/` | Raw downloads and processed tables (git-ignored) |
 | `tests/` | Basic checks |
 
-Status: day 1. Terrain, villages and the risk curve are placeholders.
+Status: day 2, block A. Live and simulated rainfall both work. Terrain, villages and the risk curve are still placeholders.
