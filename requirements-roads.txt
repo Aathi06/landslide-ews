@@ -1,0 +1,4 @@
+# Only needed for src/roads (downloading real road networks). Install with:
+#   pip install -r requirements-roads.txt
+networkx
+osmnx>=2.0
