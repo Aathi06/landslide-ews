@@ -1,0 +1,40 @@
+terrain: real; 8457 junctions, 20878 road segments, 59 hospitals
+
+   storm  area >=70%  roads cut  villages isolated
+  100 mm        0.0%       0.0%          0 of 30
+  150 mm       14.4%       0.7%          0 of 30
+  200 mm       29.1%       3.8%          3 of 30
+  250 mm       30.5%       4.1%          3 of 30
+  300 mm       30.5%       4.1%          3 of 30
+
+Detail for the 200 mm storm:
+  Udhagamandalam: 0.8 km -> 0.8 km (+0.0 km detour)
+  Mettuppalayam: 0.3 km -> 0.3 km (+0.0 km detour)
+  Mettupalayam: 0.1 km -> 0.1 km (+0.0 km detour)
+  Coonoor: 0.6 km -> 0.6 km (+0.0 km detour)
+  Kundah: 3.6 km -> 3.6 km (+0.0 km detour)
+  Kotagiri: 0.4 km -> 0.4 km (+0.0 km detour)
+  Odanthurai: 1.1 km -> 1.1 km (+0.0 km detour)
+  Nellithurai: 6.7 km -> 6.7 km (+0.0 km detour)
+  Lovedale: 0.9 km -> 0.9 km (+0.0 km detour)
+  Kattabettu: 6.2 km -> 6.4 km (+0.3 km detour)
+  Aravenu: 2.6 km -> 2.6 km (+0.0 km detour)
+  Ithalar: 0.4 km -> 0.4 km (+0.0 km detour)
+  Burliar: ISOLATED (was 3.9 km from a hospital)
+  Periya Bikkatty: 2.6 km -> 2.6 km (+0.0 km detour)
+  Yellanalli: 3.2 km -> 3.6 km (+0.3 km detour)
+  Ketti Valley: 1.2 km -> 1.2 km (+0.0 km detour)
+  Pykara: 19.2 km -> 19.2 km (+0.0 km detour)
+  Glenmorgan: 22.1 km -> 22.1 km (+0.0 km detour)
+  Thalaikundah: 7.1 km -> 7.1 km (+0.0 km detour)
+  T R Bazaar: 27.2 km -> 27.2 km (+0.0 km detour)
+  Edakadu: 9.1 km -> 11.8 km (+2.7 km detour)
+  Kulisholai: 6.5 km -> 6.8 km (+0.3 km detour)
+  Mavanalla: ISOLATED (was 20.2 km from a hospital)
+  Tuttapallam: 5.8 km -> 5.8 km (+0.0 km detour)
+  Emerald: 3.5 km -> 3.5 km (+0.0 km detour)
+  Boys Company: 1.2 km -> 1.2 km (+0.0 km detour)
+  UppuPallam: 1.3 km -> 1.3 km (+0.0 km detour)
+  RamaeGounden Pudhur: 1.3 km -> 1.3 km (+0.0 km detour)
+  Katteri: ISOLATED (was 3.6 km from a hospital)
+  Kallar: 7.1 km -> 7.1 km (+0.0 km detour)
