@@ -71,9 +71,9 @@ def village_access(G, G_cut, villages: Sequence, anchors: Sequence[tuple[float, 
         if base is None:                                  # never connected, even before the storm
             rows.append(VillageAccess(v.name, True, float("inf"), None, None))
         elif n in after:
-            rows.append(VillageAccess(v.name, False, base / 1000, after[n] / 1000, (after[n] - base) / 1000))
+            rows.append(VillageAccess(v.name, False, float(base) / 1000, float(after[n]) / 1000, float(after[n] - base) / 1000))
         else:
-            rows.append(VillageAccess(v.name, True, base / 1000, None, None))
+            rows.append(VillageAccess(v.name, True, float(base) / 1000, None, None))
     return rows
 
 
