@@ -57,14 +57,14 @@ def test_parse_handles_nulls_and_single_location():
 
 def test_live_risk_rises_after_a_storm():
     ctx = load_region_context("nilgiris")
-    res = run_live(ctx.slope, ctx.grid, fake_live(), now=NOW)
+    res = run_live(ctx.susceptibility, ctx.grid, fake_live(), now=NOW)
     assert res.offsets[res.now_frame] == 0 and min(res.offsets) >= -72 and max(res.offsets) <= 48
     assert res.risk_frames[res.now_frame].mean() > res.risk_frames[0].mean()
 
 
 def test_dry_week_stays_calm():
     ctx = load_region_context("nilgiris")
-    res = run_live(ctx.slope, ctx.grid, fake_live(mm=0.0), now=NOW)
+    res = run_live(ctx.susceptibility, ctx.grid, fake_live(mm=0.0), now=NOW)
     assert max(f.max() for f in res.risk_frames) < 50
 
 

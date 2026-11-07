@@ -17,12 +17,12 @@ class StormResult:
     total_hours: int
 
 
-def run_storm(slope: np.ndarray, total_mm: float, hours: int, pattern: str) -> StormResult:
+def run_storm(susceptibility: np.ndarray, total_mm: float, hours: int, pattern: str) -> StormResult:
     rain = np.concatenate([hyetograph(total_mm, hours, pattern), np.zeros(TAIL_HOURS)])
     cum = np.cumsum(rain)
     n = len(rain)
     picks = np.unique(np.linspace(0, n - 1, min(n, MAX_FRAMES)).round().astype(int))
-    frames = [np.round(predict_risk(slope, window_total(cum, h, 24), window_total(cum, h, 72)) * 100).astype(np.uint8)
+    frames = [np.round(predict_risk(susceptibility, window_total(cum, h, 24), window_total(cum, h, 72)) * 100).astype(np.uint8)
               for h in picks]
     return StormResult(frames, [int(h) + 1 for h in picks],
                        [round(float(cum[h]), 1) for h in picks],
@@ -50,7 +50,7 @@ class LiveResult:
     stale: bool
 
 
-def run_live(slope: np.ndarray, grid: Grid, live: LiveRain, now: datetime | None = None) -> LiveResult:
+def run_live(susceptibility: np.ndarray, grid: Grid, live: LiveRain, now: datetime | None = None) -> LiveResult:
     """Same pipeline as a simulated storm, but the rain comes from the live source.
     Rolling totals are computed at the 25 sample points, then spread over the grid."""
     now = now or datetime.now(timezone.utc)
@@ -70,7 +70,7 @@ def run_live(slope: np.ndarray, grid: Grid, live: LiveRain, now: datetime | None
     def spread(field_at_hour: np.ndarray) -> np.ndarray:
         return bilinear(field_at_hour.reshape(n, n), live.lat_axis, live.lon_axis, glat, glon).ravel()
 
-    frames = [np.round(predict_risk(slope, spread(r24[:, h]), spread(r72[:, h])) * 100).astype(np.uint8)
+    frames = [np.round(predict_risk(susceptibility, spread(r24[:, h]), spread(r72[:, h])) * 100).astype(np.uint8)
               for h in picks]
     return LiveResult(frames, [h - now_idx for h in picks],
                       [round(float(live.rain[:, h].mean()), 2) for h in picks],

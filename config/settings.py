@@ -28,3 +28,9 @@ DEM_PAD_DEG = 0.002        # read a little beyond the region so edge cells have 
 # real  = build it now (downloads the DEM), fail loudly if impossible
 # mock  = always synthetic (used by the tests)
 TERRAIN_MODE = os.environ.get("EWS_TERRAIN", "auto")
+
+# ---- risk model ----
+MODELS_DIR = ROOT / "models"
+# Multiplies the Caine rainfall thresholds. 1.0 = the published global threshold.
+# scripts/check_trigger.py suggests a local value; override without editing: EWS_TRIGGER_SCALE=0.7
+TRIGGER_SCALE = float(os.environ.get("EWS_TRIGGER_SCALE", "1.0"))

@@ -32,7 +32,7 @@ def main(region_key="nilgiris", mm_values=(100, 150, 200, 250, 300), detail_mm=2
     print(f"{'storm':>8} {'area >=70%':>11} {'roads cut':>10} {'villages isolated':>18}")
     detail = None
     for mm in sorted(set(mm_values) | {detail_mm}):
-        frame = peak_frame(run_storm(ctx.slope, mm, hours, "burst").risk_frames)
+        frame = peak_frame(run_storm(ctx.susceptibility, mm, hours, "burst").risk_frames)
         rep = cascade_report(G, ctx.villages, anchors, make_risk_sampler(ctx.grid, frame), ALERT_THRESHOLD)
         area = 100 * float((frame >= int(ALERT_THRESHOLD * 100)).mean())
         cut = 100 * rep["cut_edges"] / rep["total_edges"]

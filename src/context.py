@@ -7,7 +7,9 @@ import numpy as np
 
 from config.regions import REGIONS
 from config.settings import CELL_M, TERRAIN_MODE
+from src.exposure.osm_villages import load_cached_villages
 from src.exposure.villages import Village, pick_placeholder_villages
+from src.model.susceptibility import SLOPE_RANK, load_model, score, usable
 from src.terrain.build import build_and_cache, load_cached_features
 from src.terrain.dem import make_mock_dem
 from src.terrain.features import slope_degrees
@@ -21,6 +23,9 @@ class RegionContext:
     villages: list[Village]
     features: dict               # name -> flat array, one value per cell
     terrain_source: str          # "real" (Copernicus DEM) or "mock" (synthetic)
+    susceptibility: np.ndarray   # per cell, 0..1: how landslide-prone the ground is (the model's static input)
+    model_method: str            # "frequency_ratio" (trained on the inventory) or "slope_rank" (fallback)
+    villages_source: str = "placeholder"   # "osm" (cached OpenStreetMap settlements) or "placeholder"
 
 
 @lru_cache(maxsize=8)
@@ -41,4 +46,11 @@ def load_region_context(key: str) -> RegionContext:
         slope = slope_degrees(dem, grid.cell_m).ravel()
         features = {"elevation": dem.ravel(), "slope_mean": slope, "slope_max": slope}
         source = "mock"
-    return RegionContext(grid, slope, pick_placeholder_villages(grid, slope, seed), features, source)
+    model = load_model(key) if source == "real" else None      # synthetic terrain never uses a trained model
+    if not usable(model, features):
+        model = SLOPE_RANK
+    villages = load_cached_villages(region, grid) if source == "real" else None   # synthetic terrain keeps placeholders
+    villages_source = "osm" if villages else "placeholder"
+    villages = villages or pick_placeholder_villages(grid, slope, seed)
+    return RegionContext(grid, slope, villages, features, source,
+                         score(model, features), model["method"], villages_source)
