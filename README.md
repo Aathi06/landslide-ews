@@ -75,9 +75,9 @@ Telegram: set `EWS_ALERTS_SEND=1`, `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. 
 
 ## Team
 - Terrain, rainfall, risk model, dashboard, integration: Aathi Krishnan M
-- Alerts (`src/alerts/`): TEAMMATE NAME
-- Road-network cascade (`src/roads/`): TEAMMATE NAME
-- Report and demo notes (`docs/`): TEAMMATE NAME
+- Alerts (`src/alerts/`): Logesh S
+- Road-network cascade (`src/roads/`): Karthik S
+- Report and demo notes (`docs/`): Ragul S
 
 ## Data and credits
 NASA Global Landslide Catalog; Copernicus DEM GLO-30; Open-Meteo (ERA5 and forecast); OpenStreetMap contributors;
