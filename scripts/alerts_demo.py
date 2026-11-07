@@ -9,7 +9,7 @@ from src.scenario import run_storm
 
 sys.stdout.reconfigure(encoding="utf-8")      # Windows consoles cannot print Tamil/Hindi otherwise
 ctx = load_region_context("nilgiris")
-storm = run_storm(ctx.slope, total_mm=260, hours=48, pattern="burst")
+storm = run_storm(ctx.susceptibility, total_mm=260, hours=48, pattern="burst")
 tracker = AlertTracker()
 for hour, frame in zip(storm.hours, storm.risk_frames):
     for a in dispatch_alerts(ctx.villages, frame, tracker, langs=("en", "ta")):

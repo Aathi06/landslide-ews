@@ -1,0 +1,30 @@
+22 dated events. Caine threshold: 103 mm/24 h, 201 mm/72 h
+Rain sampled at the region centre (11.40, 76.75); ERA5 is a coarse model and can under-estimate extremes.
+
+date          24h mm  72h mm  x threshold
+2007-10-26        11      52         0.26
+2008-02-13         2      20         0.10
+2008-06-25         1      14         0.07
+2009-11-09        80     177         0.88
+2011-06-16         2      22         0.11
+2012-10-21        29      61         0.30
+2013-07-25        14      25         0.13
+2013-11-24         4       6         0.04
+2014-05-04         8      12         0.08
+2015-09-06        26      70         0.35
+2015-11-07         3      32         0.16
+2015-11-07         3      32         0.16
+2016-04-13         0       3         0.02
+2016-11-16         1       5         0.03
+2016-11-16         1       5         0.03
+2016-12-14        17      32         0.16
+2016-12-16         1      25         0.12
+2016-12-22         0       0         0.00
+2017-01-30         4      24         0.12
+2017-03-24         0       7         0.04
+2017-05-07         9      16         0.09
+2017-06-01        25      34         0.25
+
+Events at or above the Caine threshold: 0 of 22; median 0.11x
+Suggested EWS_TRIGGER_SCALE = 0.30  (rain level that 75% of these events reached or exceeded)
+Use it:  EWS_TRIGGER_SCALE=0.30 uvicorn api.main:app --reload

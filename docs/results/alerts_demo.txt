@@ -1,0 +1,28 @@
+[hour 28] Kundah watch (en) delivered=False
+    WATCH: Landslide risk is rising near Kundah (63%). About 15,000 people live there. Keep monitoring rainfall and be ready to move.
+[hour 28] Kundah watch (ta) delivered=False
+    கவனிக்கவும்: Kundah அருகே நிலச்சரிவு அபாயம் அதிகரித்து வருகிறது (63%). அங்கு சுமார் 15,000 பேர் வசிக்கின்றனர். மழை நிலவரத்தைக் கவனித்து, பாதுகாப்பான இடத்திற்குச் செல்லத் தயாராக இருங்கள்.
+[hour 28] Kattabettu watch (en) delivered=False
+    WATCH: Landslide risk is rising near Kattabettu (50%). About 1,500 people live there. Keep monitoring rainfall and be ready to move.
+[hour 28] Kattabettu watch (ta) delivered=False
+    கவனிக்கவும்: Kattabettu அருகே நிலச்சரிவு அபாயம் அதிகரித்து வருகிறது (50%). அங்கு சுமார் 1,500 பேர் வசிக்கின்றனர். மழை நிலவரத்தைக் கவனித்து, பாதுகாப்பான இடத்திற்குச் செல்லத் தயாராக இருங்கள்.
+[hour 28] Burliar watch (en) delivered=False
+    WATCH: Landslide risk is rising near Burliar (60%). About 1,500 people live there. Keep monitoring rainfall and be ready to move.
+[hour 28] Burliar watch (ta) delivered=False
+    கவனிக்கவும்: Burliar அருகே நிலச்சரிவு அபாயம் அதிகரித்து வருகிறது (60%). அங்கு சுமார் 1,500 பேர் வசிக்கின்றனர். மழை நிலவரத்தைக் கவனித்து, பாதுகாப்பான இடத்திற்குச் செல்லத் தயாராக இருங்கள்.
+[hour 28] Edakadu watch (en) delivered=False
+    WATCH: Landslide risk is rising near Edakadu (53%). About 1,500 people live there. Keep monitoring rainfall and be ready to move.
+[hour 28] Edakadu watch (ta) delivered=False
+    கவனிக்கவும்: Edakadu அருகே நிலச்சரிவு அபாயம் அதிகரித்து வருகிறது (53%). அங்கு சுமார் 1,500 பேர் வசிக்கின்றனர். மழை நிலவரத்தைக் கவனித்து, பாதுகாப்பான இடத்திற்குச் செல்லத் தயாராக இருங்கள்.
+[hour 30] Yellanalli watch (en) delivered=False
+    WATCH: Landslide risk is rising near Yellanalli (50%). About 1,500 people live there. Keep monitoring rainfall and be ready to move.
+[hour 30] Yellanalli watch (ta) delivered=False
+    கவனிக்கவும்: Yellanalli அருகே நிலச்சரிவு அபாயம் அதிகரித்து வருகிறது (50%). அங்கு சுமார் 1,500 பேர் வசிக்கின்றனர். மழை நிலவரத்தைக் கவனித்து, பாதுகாப்பான இடத்திற்குச் செல்லத் தயாராக இருங்கள்.
+[hour 31] Katteri watch (en) delivered=False
+    WATCH: Landslide risk is rising near Katteri (50%). About 1,500 people live there. Keep monitoring rainfall and be ready to move.
+[hour 31] Katteri watch (ta) delivered=False
+    கவனிக்கவும்: Katteri அருகே நிலச்சரிவு அபாயம் அதிகரித்து வருகிறது (50%). அங்கு சுமார் 1,500 பேர் வசிக்கின்றனர். மழை நிலவரத்தைக் கவனித்து, பாதுகாப்பான இடத்திற்குச் செல்லத் தயாராக இருங்கள்.
+[hour 33] Kundah warning (en) delivered=False
+    WARNING: High landslide risk near Kundah (70%). About 15,000 people live there. Stay away from steep slopes, streams and road cuts, and follow official instructions.
+[hour 33] Kundah warning (ta) delivered=False
+    எச்சரிக்கை: Kundah அருகே நிலச்சரிவு அபாயம் அதிகமாக உள்ளது (70%). அங்கு சுமார் 15,000 பேர் வசிக்கின்றனர். செங்குத்தான சரிவுகள், ஓடைகள் மற்றும் சாலை வெட்டுப் பகுதிகளிலிருந்து விலகி இருங்கள்; அதிகாரிகளின் அறிவுறுத்தல்களைப் பின்பற்றுங்கள்.

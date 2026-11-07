@@ -15,19 +15,19 @@ def test_slope_of_a_45_degree_plane():
 
 
 def test_more_rain_never_lowers_risk():
-    slope = np.linspace(0, 45, 200)
-    low = predict_risk(slope, 20, 60)
-    high = predict_risk(slope, 80, 200)
+    susc = np.linspace(0, 1, 200)
+    low = predict_risk(susc, 20, 60)
+    high = predict_risk(susc, 80, 200)
     assert (high >= low).all()
 
 
-def test_steeper_is_riskier_at_equal_rain():
-    r = predict_risk(np.array([10.0, 30.0, 40.0]), 50, 150)
+def test_more_susceptible_is_riskier_at_equal_rain():
+    r = predict_risk(np.array([0.1, 0.5, 0.9]), 50, 150)
     assert r[0] < r[1] < r[2]
 
 
 def test_storm_peak_grows_with_total_rain():
-    slope = load_region_context("nilgiris").slope
+    slope = load_region_context("nilgiris").susceptibility
     peaks = [max(f.mean() for f in run_storm(slope, mm, 48, "burst").risk_frames) for mm in (0, 100, 200, 300)]
     assert peaks == sorted(peaks)
 

@@ -60,6 +60,17 @@
   #feed li.new{animation:slide .35s ease-out}
   @keyframes slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
+  .link{border:0;background:transparent;color:var(--rain);font:inherit;font-size:12.5px;cursor:pointer;padding:0}
+  .link:disabled{color:var(--muted);cursor:not-allowed}
+  .head{display:flex;justify-content:space-between;align-items:baseline}
+  dialog{background:#0e1e26;color:var(--text);border:1px solid var(--line);border-radius:16px;padding:20px;width:min(560px,92vw);max-height:80vh;overflow:auto}
+  dialog::backdrop{background:rgba(0,0,0,.55)}
+  #msg-list{list-style:none;margin:12px 0;padding:0;font-size:13.5px;line-height:1.45}
+  #msg-list li{padding:10px 0;border-top:1px solid var(--line)}
+  #msg-list .empty{color:var(--muted);border-top:0}
+  #send{width:100%;border:0;border-radius:8px;padding:10px;background:var(--rain);color:#06202e;font:inherit;font-weight:700;cursor:pointer}
+  #send:disabled{opacity:.6;cursor:progress}
+
   /* bottom: timeline */
   #timeline{left:16px;right:342px;bottom:16px;height:64px;border-radius:16px;display:flex;align-items:center;gap:16px;padding:0 20px}
   #play{width:40px;height:40px;border-radius:50%;border:0;background:var(--text);color:var(--ink);cursor:pointer;flex:none;display:grid;place-items:center}
@@ -110,10 +121,12 @@
     <div class="stat wide"><div class="n" id="s-alert">0 of 0</div><div class="l">settlements on alert</div></div>
     <div class="stat"><div class="n" id="s-pop">0</div><div class="l">people in alerted settlements</div></div>
     <div class="stat"><div class="n" id="s-area">0%</div><div class="l">of the area above 70% risk</div></div>
+    <div class="stat"><div class="n" id="s-roads">&ndash;</div><div class="l" id="l-roads">of roads cut at peak</div></div>
+    <div class="stat"><div class="n" id="s-cut">&ndash;</div><div class="l">settlements cut off at peak</div></div>
   </div>
   <div class="legend"></div>
   <div class="legend-l"><span>Stable</span><span>Likely to slide</span></div>
-  <h2>Alerts</h2>
+  <div class="head"><h2>Alerts</h2><button id="msgs" class="link" disabled>Messages</button></div>
   <ul id="feed"></ul>
 </aside>
 
@@ -124,6 +137,18 @@
   <input id="scrub" type="range" min="0" max="0" value="0" aria-label="Storm hour">
   <div id="clock">Run a storm to begin</div>
 </section>
+
+<dialog id="dlg" aria-label="Alert messages">
+  <div class="head"><h2 style="margin:0">Alert messages</h2><button id="dlg-close" class="link">Close</button></div>
+  <div class="seg" id="langs" role="group" aria-label="Language">
+    <button data-l="en" aria-pressed="true">English</button>
+    <button data-l="ta" aria-pressed="false">தமிழ்</button>
+    <button data-l="hi" aria-pressed="false">हिन्दी</button>
+  </div>
+  <ul id="msg-list"></ul>
+  <p class="note" id="send-note"></p>
+  <button id="send"></button>
+</dialog>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
@@ -137,6 +162,8 @@ let cells = [];              // [{i}] one per grid cell
 let scen = null;             // current storm: {risk:[Uint8Array], hours, cum, rate, firstAlert:[]}
 let frame = 0, playing = false, playTimer = null, pattern = 'burst', mode = 'sim';
 let lastFeedCount = 0;
+let impact = null, impactToken = 0, lastQuery = '', lang = 'en';
+const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- colour ramp: stable teal -> amber -> orange -> crimson ---------- */
 const STOPS = [[0,[46,139,139]],[.45,[232,197,71]],[.7,[242,140,40]],[1,[194,24,91]]];
@@ -162,9 +189,7 @@ async function init(){
   cells = Array.from({length:S.rows*S.cols},(_,i)=>({i}));
   $('#title').textContent = S.region.split(',')[0] + ' landslide watch';
   document.title = $('#title').textContent;
-  $('#terrain-note').textContent = S.terrain==='real'
-    ? 'Terrain: real 30 m elevation (Copernicus DEM). Settlements are placeholders until road and village data are loaded.'
-    : 'Terrain and settlements are placeholders until the real elevation and village data are loaded.';
+  setNotes();
 
   map = new maplibregl.Map({
     container:'map',
@@ -178,6 +203,16 @@ async function init(){
   await runStorm();
 }
 
+function setNotes(){
+  let t = S.terrain==='real' ? 'Terrain: real 30 m elevation (Copernicus DEM).' : 'Terrain is synthetic until the real elevation data is loaded.';
+  t += S.villages_source==='osm' ? ' Settlements: OpenStreetMap (population partly estimated).'
+       : ' Settlements are placeholders until real terrain and scripts.build_villages are set up.';
+  t += S.model==='frequency_ratio' ? ' Risk = susceptibility learned from the NASA landslide inventory x rainfall trigger.'
+       : ' Risk model: slope-based fallback (no trained model loaded).';
+  if(impact && impact.roads && !impact.roads.available) t += ' Roads: ' + impact.roads.reason;
+  $('#terrain-note').textContent = t;
+}
+
 function cellPos(i){
   return [S.west+((i%S.cols)+.5)*S.dlon, S.south+(Math.floor(i/S.cols)+.5)*S.dlat];
 }
@@ -186,7 +221,12 @@ function getTooltip({object, layer}){
   const style = {background:'#0e1e26',color:'#dde8e6',border:'1px solid #26434f',borderRadius:'8px',padding:'8px 10px',fontSize:'13px'};
   if(layer.id==='villages'){
     const r = scen.risk[frame][object.cell];
-    return {html:`<b>${object.name}</b><br>${object.pop.toLocaleString()} people<br>Risk ${r}%`, style};
+    let extra = '';
+    const a = impact && impact.roads && impact.roads.available && frame>=impact.peak_frame
+      ? impact.roads.villages.find(x=>x.name===object.name) : null;
+    if(a) extra = a.isolated ? '<br><b style="color:#ff7a8a">Cut off from hospital at peak</b>'
+                 : (a.extra_km>0.05 ? `<br>Hospital detour +${a.extra_km} km at peak` : '');
+    return {html:`<b>${esc(object.name)}</b><br>${object.pop.toLocaleString()} people<br>Risk ${r}%${extra}`, style};
   }
   return null;
 }
@@ -231,6 +271,18 @@ function buildLayers(t){
       getPosition:d=>[d.lon,d.lat], getRadius:()=>350+1500*phase,
       getLineColor:()=>[255,120,120,Math.round(220*(1-phase))], parameters:{depthTest:false}, updateTriggers:{getRadius:[phase],getLineColor:[phase]}
     }));
+    if(impact && impact.roads && impact.roads.available && frame>=impact.peak_frame){
+      L.push(new deck.LineLayer({
+        id:'cut-roads', data:impact.roads.segments, widthUnits:'pixels', getWidth:3,
+        getSourcePosition:d=>[d[0],d[1]], getTargetPosition:d=>[d[2],d[3]], getColor:[255,70,90,235],
+        parameters:{depthTest:false}
+      }));
+      const iso = S.villages.filter(v=>impact.roads.isolated.includes(v.name));
+      L.push(new deck.ScatterplotLayer({
+        id:'isolated', data:iso, radiusUnits:'meters', stroked:true, filled:false, lineWidthUnits:'pixels', getLineWidth:3,
+        getPosition:d=>[d.lon,d.lat], getRadius:700, getLineColor:[190,130,255,240], parameters:{depthTest:false}
+      }));
+    }
     L.push(new deck.ScatterplotLayer({
       id:'villages', data:S.villages, radiusUnits:'meters', stroked:true, lineWidthUnits:'pixels', getLineWidth:2,
       getPosition:d=>[d.lon,d.lat], getRadius:d=>260+Math.sqrt(d.pop)*3,
@@ -263,6 +315,7 @@ async function runStorm(){
   const thr = Math.round(S.threshold*100);
   const firstAlert = S.villages.map(v=>risk.findIndex(f=>f[v.cell]>=thr));
   scen = {mode:'sim', risk, hours:d.hours, cum:d.cum, rate:d.rate, firstAlert, totalHours:d.total_hours};
+  loadImpact(new URLSearchParams({mode:'sim', total_mm:q.get('total_mm'), hours:q.get('hours'), pattern}));
   $('#src-note').textContent='';
   const sc=$('#scrub'); sc.max=risk.length-1; sc.value=0; frame=0; lastFeedCount=0;
   update(); btn.disabled=false; btn.textContent='Run storm';
@@ -286,6 +339,7 @@ async function loadLive(refresh=false){
     const risk=d.frames.map(b64), thr=Math.round(S.threshold*100);
     const firstAlert=S.villages.map(v=>risk.findIndex(f=>f[v.cell]>=thr));
     scen={mode:'live', risk, offsets:d.offsets, rate:d.rate, r72:d.r72, firstAlert};
+    loadImpact(new URLSearchParams({mode:'live'}));
     const sc=$('#scrub'); sc.max=risk.length-1; frame=d.now_frame; lastFeedCount=0;
     $('#src-note').textContent = d.stale
       ? `Offline: showing rainfall cached at ${fmtTime(d.fetched_at)}.`
@@ -324,10 +378,69 @@ function update(){
   if(!items.length){ feed.innerHTML='<li class="empty">No settlement has crossed 70% risk yet.</li>'; lastFeedCount=0; return; }
   feed.innerHTML=items.map((x,k)=>{
     const r=scen.risk[x.fa][x.v.cell];
-    return `<li class="${k===0&&items.length>lastFeedCount?'new':''}"><span>${x.v.name} reached ${r}% risk<br><span style="color:var(--muted)">${x.v.pop.toLocaleString()} people</span></span><span>${hourLabel(x.fa)}</span></li>`;
+    return `<li class="${k===0&&items.length>lastFeedCount?'new':''}"><span>${esc(x.v.name)} reached ${r}% risk<br><span style="color:var(--muted)">${x.v.pop.toLocaleString()} people</span></span><span>${hourLabel(x.fa)}</span></li>`;
   }).join('');
   lastFeedCount=items.length;
 }
+
+/* ---------- impact: roads cut, settlements stranded, alert messages ---------- */
+async function loadImpact(q){
+  const tok = ++impactToken; lastQuery = q.toString(); impact = null; renderImpact();
+  try{
+    const r = await fetch('/api/impact?'+lastQuery);
+    if(!r.ok) throw new Error(r.statusText);
+    const d = await r.json();
+    if(tok!==impactToken) return;
+    impact = d;
+  }catch(e){ if(tok!==impactToken) return; impact = {failed:true}; }
+  renderImpact();
+}
+function renderImpact(){
+  const roads = impact && impact.roads;
+  const set = (a,b,c)=>{ $('#s-roads').textContent=a; $('#s-cut').textContent=b; $('#l-roads').textContent=c; };
+  if(!impact) set('…','…','of roads cut at peak');
+  else if(impact.failed) set('–','–','impact unavailable');
+  else if(!roads.available) set('–','–','road data not built yet');
+  else{
+    const when = scen ? hourLabel(impact.peak_frame) : 'peak';
+    set(roads.cut_pct+'%', `${roads.isolated.length} of ${S.villages.length}`, `of roads cut at peak (${when})`);
+  }
+  $('#msgs').disabled = !(impact && !impact.failed);
+  setNotes();
+}
+function renderMsgs(){
+  const list = $('#msg-list');
+  const items = impact && !impact.failed ? impact.alerts.filter(a=>a.lang===lang) : [];
+  list.innerHTML = items.length
+    ? items.map(a=>`<li><b>${hourLabel(a.frame)} &middot; ${a.level}</b> &middot; ${esc(a.village)}<br>${esc(a.text)}</li>`).join('')
+    : '<li class="empty">No settlement reaches the watch level in this storm.</li>';
+  $('#send').textContent = S.alerts_send_enabled ? 'Send to Telegram' : 'Dry run (nothing is sent)';
+  $('#send-note').textContent = S.alerts_send_enabled
+    ? 'Telegram sending is ON. Settlements already announced at the same level are not repeated until the server restarts.'
+    : 'Telegram sending is off. To enable it, start the server with EWS_ALERTS_SEND=1, TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID set.';
+}
+$('#msgs').onclick = ()=>{ renderMsgs(); $('#dlg').showModal(); };
+$('#dlg-close').onclick = ()=>$('#dlg').close();
+$('#langs').onclick = e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  lang = b.dataset.l;
+  document.querySelectorAll('#langs button').forEach(x=>x.setAttribute('aria-pressed', x===b));
+  renderMsgs();
+};
+$('#send').onclick = async ()=>{
+  if(S.alerts_send_enabled && !confirm('Send these alerts to the Telegram chat now?')) return;
+  const btn = $('#send'); btn.disabled = true;
+  try{
+    const q = new URLSearchParams(lastQuery); q.set('langs', lang);
+    const r = await fetch('/api/alerts/send?'+q, {method:'POST'});
+    if(!r.ok) throw new Error(r.statusText);
+    const d = await r.json();
+    $('#send-note').textContent = !d.enabled ? `Dry run: ${d.count} message(s) would be sent. Nothing left this machine.`
+      : d.count===0 ? 'Nothing new to announce: every settlement was already alerted at this level.'
+      : `Telegram accepted ${d.delivered} of ${d.count} message(s).`;
+  }catch(e){ $('#send-note').textContent = 'Could not send: '+e.message; }
+  btn.disabled = false;
+};
 
 /* ---------- playback ---------- */
 const ICON_PLAY='<path d="M4 2.5v11l9-5.5z" fill="currentColor"/>', ICON_PAUSE='<path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z" fill="currentColor"/>';
