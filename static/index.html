@@ -102,7 +102,7 @@
   </div>
   <button id="run">Run storm</button>
   <p class="note" id="src-note"></p>
-  <p class="note hide-sm">Terrain and settlements are placeholders until the real elevation and village data are loaded.</p>
+  <p class="note hide-sm" id="terrain-note"></p>
 </section>
 
 <aside id="situation" class="panel" aria-label="Situation">
@@ -162,6 +162,9 @@ async function init(){
   cells = Array.from({length:S.rows*S.cols},(_,i)=>({i}));
   $('#title').textContent = S.region.split(',')[0] + ' landslide watch';
   document.title = $('#title').textContent;
+  $('#terrain-note').textContent = S.terrain==='real'
+    ? 'Terrain: real 30 m elevation (Copernicus DEM). Settlements are placeholders until road and village data are loaded.'
+    : 'Terrain and settlements are placeholders until the real elevation and village data are loaded.';
 
   map = new maplibregl.Map({
     container:'map',

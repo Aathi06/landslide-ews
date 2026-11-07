@@ -17,3 +17,14 @@ LIVE_FORECAST_DAYS = 3
 LIVE_FRAMES_BACK = 72     # timeline starts this many hours before "now"
 LIVE_FRAMES_AHEAD = 48    # ...and ends this many hours after
 LIVE_CACHE_MIN = 30       # reuse a cached response younger than this (minutes)
+
+# ---- real terrain (Copernicus GLO-30, 30 m) ----
+import os
+
+RAW_DIR = ROOT / "data" / "raw"
+DEM_BASE_URL = "https://copernicus-dem-30m.s3.amazonaws.com"
+DEM_PAD_DEG = 0.002        # read a little beyond the region so edge cells have neighbours for gradients
+# auto  = use the cached real-terrain file if it exists, else synthetic terrain (no network at startup)
+# real  = build it now (downloads the DEM), fail loudly if impossible
+# mock  = always synthetic (used by the tests)
+TERRAIN_MODE = os.environ.get("EWS_TERRAIN", "auto")

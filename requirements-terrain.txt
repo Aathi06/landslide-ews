@@ -1,0 +1,3 @@
+# Needed to read real elevation data (scripts/build_terrain.py). Install with:
+#   pip install -r requirements-terrain.txt
+rasterio

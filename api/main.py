@@ -32,7 +32,7 @@ def static_info(region: str = DEFAULT_REGION):
     g, r = ctx.grid, ctx.grid.region
     return dict(region=r.name, rows=g.rows, cols=g.cols, cell_m=g.cell_m,
                 south=r.south, west=r.west, dlat=g.dlat, dlon=g.dlon,
-                center=list(r.center), threshold=ALERT_THRESHOLD,
+                center=list(r.center), threshold=ALERT_THRESHOLD, terrain=ctx.terrain_source,
                 villages=[asdict(v) for v in ctx.villages])
 
 

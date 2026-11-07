@@ -20,7 +20,8 @@ class Village:
 def pick_placeholder_villages(grid: Grid, slope: np.ndarray, seed: int, n: int = 14) -> list[Village]:
     """Scatter n fake settlements on mid-slope cells, at least 14 cells apart."""
     rng = np.random.default_rng(seed)
-    candidates = np.flatnonzero((slope.ravel() > 17) & (slope.ravel() < 32))
+    lo, hi = np.percentile(slope, [40, 85])          # hill settlements: neither flat nor the steepest slopes
+    candidates = np.flatnonzero((slope.ravel() > lo) & (slope.ravel() < hi))
     picked: list[tuple[int, int]] = []
     for idx in rng.permutation(candidates):
         r, c = divmod(int(idx), grid.cols)

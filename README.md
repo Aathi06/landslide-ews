@@ -13,7 +13,7 @@ pytest                              # sanity checks
 | Folder | Job |
 |---|---|
 | `config/` | Region boxes (`regions.py`) and global settings (`settings.py`) |
-| `src/terrain/` | Grid, elevation source, slope and other terrain features |
+| `src/terrain/` | Grid, elevation sources (synthetic and real Copernicus 30 m DEM), slope/aspect/curvature, caching |
 | `src/rainfall/` | Storm simulator, live Open-Meteo source (`live.py`), rolling totals, interpolation |
 | `src/model/` | `predict_risk()`, the single function the trained model replaces |
 | `src/exposure/` | Settlements at risk |
@@ -25,4 +25,4 @@ pytest                              # sanity checks
 | `data/` | Raw downloads and processed tables (git-ignored) |
 | `tests/` | Basic checks |
 
-Status: day 2, block A. Live and simulated rainfall both work. Terrain, villages and the risk curve are still placeholders.
+Status: day 2, block B. Live and simulated rainfall work. Real terrain loads after `python -m scripts.build_terrain` (needs `pip install -r requirements-terrain.txt`); until then the dashboard uses synthetic terrain. Villages and the risk curve are still placeholders.
